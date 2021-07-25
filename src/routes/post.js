@@ -28,6 +28,14 @@ router.post('/create', async (req, res) => {
     });
   }
 
+  if (file && !RegExp('image//*').test(file.type)) {
+    return res.status(400).json({
+      status_code: 'error',
+      message: 'Filetype not allowed.'
+    });
+  }
+  
+
   const account = await Account.findOne({ auth }).exec();
   if (!account) {
     return res.status(400).json({
