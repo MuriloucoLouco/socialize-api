@@ -24,6 +24,10 @@ const accountSchema = mongoose.Schema({
   posts: {
     type: Array,
     default: []
+  },
+  profile_picture: {
+    type: String,
+    default: ''
   }
 });
 

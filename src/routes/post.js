@@ -4,7 +4,11 @@ const crypto = require('crypto');
 const router = express.Router();
 const Account = require('../models/Account');
 const Post = require('../models/Post');
-const { route } = require('./account');
+const fs = require('fs');
+const path = require('path');
+const root_dir = require('app-root-path').toString();
+
+const upload_dir = path.join(root_dir, 'static', 'photos');
 
 function not_found(name) {
   return {
@@ -14,7 +18,8 @@ function not_found(name) {
 }
 
 router.post('/create', async (req, res) => {
-  const { title, text, auth } = req.body;
+  const { title, text, auth } = req.fields;
+  const file = req.files.file;
 
   if (!(title && text && auth)) {
     return res.status(400).json({
@@ -33,29 +38,39 @@ router.post('/create', async (req, res) => {
   const userid = account._id.toString();
   const username = account.user;
 
-  const post = new Post({ title, text, username, userid });
+  let image;
+  if (file) {
+    image = crypto.createHash('sha256').update(Date.now().toString() + Math.random()).digest('hex');
+  } else {
+    image = '';
+  }
+  
+  const post = new Post({ title, text, username, userid, image });
   post.save()
   .then(data => {
+    if (file) {
+      fs.copyFileSync(file.path, path.join(upload_dir, image));
+    }
     res.status(200).json({
       status_code: 'ok',
       message: post._id
     });
+    Account.findOneAndUpdate({ auth }, {
+      $push: {posts: post._id.toString()}
+    });
   })
   .catch(err => {
+    console.log(err);
     res.status(500).json({
       status_code: 'error',
       message: 'Internal server error.'
     });
   });
-
-  await Account.findOneAndUpdate({ auth }, {
-    $push: {posts: post._id.toString()}
-  });
 });
 
 
 router.post('/comment/:postid', async (req, res) => {
-  const { text, auth } = req.body;
+  const { text, auth } = req.fields;
   const postid = req.params.postid;
 
   if (!(text && auth)) {

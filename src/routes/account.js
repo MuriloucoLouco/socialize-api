@@ -14,7 +14,7 @@ async function generate_auth() {
 
 
 router.post('/register', async (req, res) => {
-  const { user, mail, pass } = req.body;
+  const { user, mail, pass } = req.fields;
   const salt = crypto.randomBytes(32).toString('hex');
 
   if (!(user && mail && pass)) {
@@ -68,7 +68,7 @@ router.post('/register', async (req, res) => {
 
 
 router.post('/login', async (req, res) => {
-  const { mail, pass } = req.body;
+  const { mail, pass } = req.fields;
 
   if (!(mail && pass)) {
     return res.status(400).json({
@@ -106,7 +106,7 @@ router.post('/login', async (req, res) => {
 
 
 router.post('/logout', async (req, res) => {
-  const { auth } = req.body;
+  const { auth } = req.fields;
 
   if (!auth) {
     return res.status(400).json({

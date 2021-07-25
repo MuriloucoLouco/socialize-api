@@ -24,6 +24,10 @@ const accountSchema = mongoose.Schema({
   comments: {
     type: Array,
     default: []
+  },
+  image: {
+    type: String,
+    default: ''
   }
 });
 
