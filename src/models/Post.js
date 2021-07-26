@@ -25,7 +25,7 @@ const accountSchema = mongoose.Schema({
     type: Array,
     default: []
   },
-  image: {
+  image_id: {
     type: String,
     default: ''
   }

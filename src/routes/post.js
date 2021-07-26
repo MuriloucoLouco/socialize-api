@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const router = express.Router();
 const Account = require('../models/Account');
 const Post = require('../models/Post');
+const Image = require('../models/Image');
 const fs = require('fs');
 const path = require('path');
 const root_dir = require('app-root-path').toString();
@@ -35,7 +36,6 @@ router.post('/create', async (req, res) => {
     });
   }
   
-
   const account = await Account.findOne({ auth }).exec();
   if (!account) {
     return res.status(400).json({
@@ -46,19 +46,27 @@ router.post('/create', async (req, res) => {
   const userid = account._id.toString();
   const username = account.user;
 
-  let image;
-  if (file) {
-    image = crypto.createHash('sha256').update(Date.now().toString() + Math.random()).digest('hex');
-  } else {
-    image = '';
+  let image_id;
+  try {
+    if (file) {
+      const image = new Image({
+        data: fs.readFileSync(file.path),
+        contentType: file.type
+      });
+      await image.save();
+      image_id = image._id.toString();
+      fs.copyFileSync(file.path, path.join(upload_dir, image_id));
+    }
+  } catch (err) {
+    return res.status(500).json({
+      status_code: 'error',
+      message: 'Internal server error.'
+    });
   }
-  
-  const post = new Post({ title, text, username, userid, image });
+
+  const post = new Post({ title, text, username, userid, image_id });
   post.save()
   .then(data => {
-    if (file) {
-      fs.copyFileSync(file.path, path.join(upload_dir, image));
-    }
     res.status(200).json({
       status_code: 'ok',
       message: post._id
