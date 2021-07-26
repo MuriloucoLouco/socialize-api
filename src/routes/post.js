@@ -56,6 +56,7 @@ router.post('/create', async (req, res) => {
       await image.save();
       image_id = image._id.toString();
       fs.copyFileSync(file.path, path.join(upload_dir, image_id));
+      fs.unlinkSync(file.path);
     }
   } catch (err) {
     return res.status(500).json({
