@@ -10,7 +10,11 @@ const formidableMiddleware = require('express-formidable');
 
 require('dotenv/config');
 
-app.use(formidableMiddleware());
+app.use(formidableMiddleware({maxFileSize: 5 * 1024*1024}));
+app.use((err, req, res, next) => {
+  //console.log(err.name);
+  res.status(500).send('ERROR!');
+});
 app.use(cors());
 
 app.use('/account', account_router);
