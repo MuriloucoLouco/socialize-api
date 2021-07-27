@@ -7,7 +7,6 @@ const account_router = require('./routes/account.js');
 const post_router = require('./routes/post.js');
 const static_router = require('./routes/static.js');
 const formidableMiddleware = require('express-formidable');
-const getRawBody = require('raw-body')
 
 require('dotenv/config');
 
