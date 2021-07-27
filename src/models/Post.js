@@ -5,7 +5,7 @@ const accountSchema = mongoose.Schema({
     type: String,
     required: true
   },
-  userid: {
+  user_id: {
     type: String,
     required: true
   },

@@ -8,21 +8,15 @@ const Image = require('../models/Image');
 const fs = require('fs');
 const path = require('path');
 const root_dir = require('app-root-path').toString();
+const { authenticate, not_found } = require('../utils.js');
 
 const upload_dir = path.join(root_dir, 'static', 'photos');
 
-function not_found(name) {
-  return {
-    status_code: 'error',
-    message: `${name} was not found.`
-  }
-}
-
 router.post('/create', async (req, res) => {
-  const { title, text, auth } = req.fields;
+  const { title, text, auth, user_id } = req.fields;
   const file = req.files.file;
 
-  if (!(title && text && auth)) {
+  if (!(title && text && auth && user_id)) {
     return res.status(400).json({
       status_code: 'error',
       message: 'Missing parameters.'
@@ -36,15 +30,13 @@ router.post('/create', async (req, res) => {
     });
   }
   
-  const account = await Account.findOne({ auth }).exec();
-  if (!account) {
+  const { valid, username } = await authenticate(user_id, auth);
+  if (!valid) {
     return res.status(400).json({
       status_code: 'error',
       message: 'Auth code invalid.'
     });
   }
-  const userid = account._id.toString();
-  const username = account.user;
 
   let image_id;
   try {
@@ -65,7 +57,7 @@ router.post('/create', async (req, res) => {
     });
   }
 
-  const post = new Post({ title, text, username, userid, image_id });
+  const post = new Post({ title, text, username, user_id, image_id });
   post.save()
   .then(async data => {
     await Account.findOneAndUpdate({ auth }, {
@@ -86,36 +78,33 @@ router.post('/create', async (req, res) => {
 });
 
 
-router.post('/comment/:postid', async (req, res) => {
-  const { text, auth } = req.fields;
-  const postid = req.params.postid;
+router.post('/comment/:post_id', async (req, res) => {
+  const { text, auth, user_id } = req.fields;
+  const post_id = req.params.post_id;
 
-  if (!(text && auth)) {
+  if (!(text && auth && user_id)) {
     return res.status(400).json({
       status_code: 'error',
       message: 'Missing parameters.'
     });
   }
 
-  if (!mongoose.Types.ObjectId.isValid(postid)) {
+  if (!mongoose.Types.ObjectId.isValid(post_id)) {
     return res.status(400).json(not_found('Post'));
   }
 
-
-  const account = await Account.findOne({ auth }).exec();
-  if (!account) {
+  const { valid, username } = await authenticate(user_id, auth);
+  if (!valid) {
     return res.status(400).json({
       status_code: 'error',
       message: 'Auth code invalid.'
     });
   }
-  const userid = account._id.toString();
-  const username = account.user;
 
-  const post = await Post.findByIdAndUpdate(postid, {
+  const post = await Post.findByIdAndUpdate(post_id, {
     $push: {
       comments: {
-        $each: [{username, userid, text}],
+        $each: [{username, user_id, text}],
         $position: 0
       }
     }
@@ -126,7 +115,7 @@ router.post('/comment/:postid', async (req, res) => {
 
   return res.status(200).json({
     status_code: 'ok',
-    message: postid
+    message: post_id
   });
 });
 
@@ -137,14 +126,14 @@ router.get('/all', async (req, res) => {
 });
 
 
-router.get('/user/:userid', async (req, res) => {
-  const userid = req.params.userid;
+router.get('/user/:user_id', async (req, res) => {
+  const user_id = req.params.user_id;
 
-  if (!mongoose.Types.ObjectId.isValid(userid)) {
+  if (!mongoose.Types.ObjectId.isValid(user_id)) {
     return res.status(400).json(not_found('User'));
   }
 
-  const account = await Account.findById(userid);
+  const account = await Account.findById(user_id);
   if (account) {
     const posts_id = account.posts;
     const posts = [];
@@ -163,15 +152,15 @@ router.get('/user/:userid', async (req, res) => {
 });
 
 
-router.get('/id/:postid', async (req, res) => {
-  const postid = req.params.postid;
+router.get('/id/:post_id', async (req, res) => {
+  const post_id = req.params.post_id;
 
-  if (!mongoose.Types.ObjectId.isValid(postid)) {
+  if (!mongoose.Types.ObjectId.isValid(post_id)) {
     return res.status(400).json(not_found('Post'));
   }
 
   try {
-    const post = await Post.findById(postid);
+    const post = await Post.findById(post_id);
     return res.status(200).json({
       status_code: 'ok',
       ...post.toObject()

@@ -3,15 +3,12 @@ const crypto = require('crypto');
 const router = express.Router();
 const validator = require('email-validator');
 const Account = require('../models/Account');
+const Token = require('../models/Token');
 
 async function generate_auth() {
-  let auth = crypto.randomBytes(32).toString('hex');
-  await Account.findOne({ auth }).exec().then(async account => {
-    if (account) auth = await generate_auth();
-  });
+  const auth = crypto.randomBytes(32).toString('hex');
   return auth;
 }
-
 
 router.post('/register', async (req, res) => {
   const { user, mail, pass } = req.fields;
@@ -51,7 +48,6 @@ router.post('/register', async (req, res) => {
   
   const account = new Account({ user, mail, hashed_pass, salt });
   account.save()
-  
   .then(data => {
     res.status(200).json({
       status_code: 'ok',
@@ -95,7 +91,11 @@ router.post('/login', async (req, res) => {
   }
 
   const auth = await generate_auth();
-  await Account.findOneAndUpdate({ mail }, { auth });
+  const hashed_auth = crypto.createHash('sha256').update(auth).digest('hex');
+  
+  const token = new Token({ user_id: account._id, auth: hashed_auth });
+  await token.save();
+
   return res.status(200).json({
     status_code: 'ok',
     username: account.user,
@@ -115,10 +115,27 @@ router.post('/logout', async (req, res) => {
     });
   }
 
-  await Account.findOneAndUpdate({ auth }, { auth: '' });
-  return res.status(200).json({
-    status_code: 'ok',
-    message: 'Sucessfully logged out.'
+  const hashed_auth = crypto.createHash('sha256').update(auth).digest('hex');
+  await Token.findOneAndDelete({ auth: hashed_auth })
+  .exec().then(token => {
+    if (token) {
+      return res.status(200).json({
+        status_code: 'ok',
+        message: 'Sucessfully logged out.'
+      });
+    } else {
+      return res.status(400).json({
+        status_code: 'error',
+        message: 'Invalid auth.'
+      });
+    }
+  })
+  .catch(err => {
+    console.log(err);
+    res.status(500).json({
+      status_code: 'error',
+      message: 'Internal server error.'
+    });
   });
 });
 

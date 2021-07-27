@@ -17,10 +17,6 @@ const accountSchema = mongoose.Schema({
     type: String,
     required: true
   },
-  auth: {
-    type: String,
-    default: ''
-  },
   posts: {
     type: Array,
     default: []
