@@ -7,14 +7,19 @@ const account_router = require('./routes/account.js');
 const post_router = require('./routes/post.js');
 const static_router = require('./routes/static.js');
 const formidableMiddleware = require('express-formidable');
+const getRawBody = require('raw-body')
 
 require('dotenv/config');
 
-app.use(formidableMiddleware({maxFileSize: 5 * 1024*1024}));
-app.use((err, req, res, next) => {
-  //console.log(err.name);
-  res.status(500).send('ERROR!');
-});
+app.use(formidableMiddleware(
+  { maxFileSize: 5 * 1024 * 1024 },
+  [{ event: 'error', action: (req, res, next, err) => {
+    return res.status(500).json({
+      status_code: 'error',
+      message: 'Internal server error.'
+    });
+  }}]
+));
 app.use(cors());
 
 app.use('/account', account_router);
