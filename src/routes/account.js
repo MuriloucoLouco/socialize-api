@@ -99,7 +99,7 @@ router.post('/login', async (req, res) => {
   return res.status(200).json({
     status_code: 'ok',
     username: account.user,
-    userid: account._id,
+    user_id: account._id,
     message: auth
   });
 });
