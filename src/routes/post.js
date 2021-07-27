@@ -60,7 +60,7 @@ router.post('/create', async (req, res) => {
   const post = new Post({ title, text, username, user_id, image_id });
   post.save()
   .then(async data => {
-    await Account.findOneAndUpdate({ auth }, {
+    await Account.findByIdAndUpdate(user_id, {
       $push: {posts: post._id.toString()}
     });
     res.status(200).json({
