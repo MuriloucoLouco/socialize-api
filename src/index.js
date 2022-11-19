@@ -26,9 +26,17 @@ app.use('/post', post_router);
 app.use('/static', static_router);
 app.get('/', (req, res) => res.send('Não tem nada aqui, amigão'));
 
-mongoose.connect(process.env.DB_CONNECTION,
-  {useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false}, () => {
-  console.log('Conectado ao banco de dados.');
+mongoose.set('useFindAndModify', false);
+
+mongoose.connect(process.env.DB_CONNECTION, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => {
+  console.log('Conectado ao banco de dados.')
+})
+.catch(error => {
+  console.log("Erro ao conectar no banco de dados: ", error);
 });
 
 app.listen(port, () => {

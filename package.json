@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon --watch src src/index.js"
+    "dev": "nodemon --watch src src/index.js",
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -18,7 +19,10 @@
     "email-validator": "^2.0.4",
     "express": "^4.17.1",
     "express-formidable": "^1.2.0",
-    "mongoose": "^5.11.9"
+    "mongoose": "^5.13.15"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "jest": "^27.0.6",
+    "node-fetch": "^2.6.1"
+  }
 }

@@ -143,6 +143,7 @@ router.get('/user/:user_id', async (req, res) => {
     }
     return res.status(200).json({
       status_code: 'ok',
+      id: user_id,
       name: account.user,
       posts: posts
     });
