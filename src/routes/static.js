@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const router = express.Router();
 const Image = require('../models/Image');
+const ProfilePicture = require('../models/ProfilePicture');
 
 const root_dir = require('app-root-path').toString();
 
@@ -43,16 +44,16 @@ router.get('/profile_pics/:profile_picture_id', async (req, res) => {
     return res.status(200).sendFile(profile_picture_path);
   } else {
     try {
-      const image = await Image.findById(image_id);
+      const profile_picture = await ProfilePicture.findById(profile_picture_id);
 
-      fs.writeFile(image_path, image.data, (err) => {
+      fs.writeFile(profile_picture_path, profile_picture.data, (err) => {
         if (err) {
           return res.status(500).json({
             status_code: 'error',
             message: 'Internal server error.'
           });
         } else {
-          return res.status(200).sendFile(image_path);
+          return res.status(200).sendFile(profile_picture_path);
         }
       });
     } catch (err) {
